@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Button btnConnect;
 
     private AbstractXMPPConnection connection;
-    private int state = 0;
+    private int status = 0;
 
     private static final String hostGeny = "10.0.3.2";
     private static final String host = "192.168.10.21";
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor magnetometer;
 
-    private boolean bBtnSendClick = false;
+    private boolean bBtnSendClicked = false;
 
     float degree;
 
@@ -63,6 +64,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorInitialize();
 
         btnSend.setEnabled(false);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     private void sensorInitialize() {
@@ -84,31 +87,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.unregisterListener((SensorEventListener) this, magnetometer);
     }
 
+
     @OnClick(R.id.btnConnect)
     public void btnConnectClick() {
-        if (state == 0) {
+        if (status == 0) {
             new XmppTask().execute();
             Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
             btnSend.setEnabled(true);
-            state++;
+            status++;
             btnConnect.setText("Disconnect");
-        }  else if (state == 1) {
+        } else if (status == 1) {
             connection.disconnect();
-            if (bBtnSendClick) {
-                bBtnSendClick = false;
-                btnSend.setEnabled(false);
-                state = 0;
-                btnConnect.setText("Connect");
-                Log.d("XMPPDisConnect", "Disconnected");
-                Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
-            }
+            bBtnSendClicked = false;
+            btnSend.setEnabled(false);
+            status = 0;
+            btnConnect.setText("Connect");
+            Log.d("XMPPDisConnect", "Disconnected");
+            Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+
         }
     }
 
     @OnClick(R.id.btnSend)
     public void btnSendClick() {
         if (connection != null && connection.isConnected()) {
-            bBtnSendClick = true;
+            bBtnSendClicked = true;
             message = new Message();
             message.setType(Message.Type.chat);
             message.setTo("alice@pakgon");
@@ -128,12 +131,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         degree = event.values[2];
 
-        if (connection != null) {
-            if (connection.isConnected()) {
-                if (bBtnSendClick) {
-                    btnSendClick();
-                }
-            }
+        if (bBtnSendClicked) {
+            btnSendClick();
         }
 
         // Magnetic
