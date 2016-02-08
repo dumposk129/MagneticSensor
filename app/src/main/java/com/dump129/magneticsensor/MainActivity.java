@@ -35,12 +35,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView tvHeading;
     @Bind(R.id.btnSend)
     Button btnSend;
-    @Bind(R.id.btnDisconnect)
-    Button btnDisconnect;
     @Bind(R.id.btnConnect)
     Button btnConnect;
 
     private AbstractXMPPConnection connection;
+    private int state = 0;
 
     private static final String hostGeny = "10.0.3.2";
     private static final String host = "192.168.10.21";
@@ -62,11 +61,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         ButterKnife.bind(this);
 
         sensorInitialize();
+
+        btnSend.setEnabled(false);
     }
 
     private void sensorInitialize() {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
     }
 
     @Override
@@ -85,52 +86,47 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @OnClick(R.id.btnConnect)
     public void btnConnectClick() {
-        new XmppTask().execute();
-        Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+        if (state == 0) {
+            new XmppTask().execute();
+            Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
+            btnSend.setEnabled(true);
+            state++;
+            btnConnect.setText("Disconnect");
+        }  else if (state == 1) {
+            connection.disconnect();
+            if (bBtnSendClick) {
+                bBtnSendClick = false;
+                btnSend.setEnabled(false);
+                state = 0;
+                btnConnect.setText("Connect");
+                Log.d("XMPPDisConnect", "Disconnected");
+                Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @OnClick(R.id.btnSend)
     public void btnSendClick() {
-
-        if (connection != null) {
-            if (connection.isConnected()) {
-                bBtnSendClick = true;
-                message = new Message();
-                message.setType(Message.Type.chat);
-                message.setTo("alice@pakgon");
-                message.setBody(Float.toString(degree));
-                ChatManager chatManager = ChatManager.getInstanceFor(connection);
-                Chat chat = chatManager.createChat("bob@pakgon");
-                try {
-                    chat.sendMessage(message);
-                } catch (SmackException.NotConnectedException e) {
-                    e.printStackTrace();
-                }
-
-                Log.d("Message", "" + message.getBody().toString());
+        if (connection != null && connection.isConnected()) {
+            bBtnSendClick = true;
+            message = new Message();
+            message.setType(Message.Type.chat);
+            message.setTo("alice@pakgon");
+            message.setBody(Float.toString(degree));
+            ChatManager chatManager = ChatManager.getInstanceFor(connection);
+            Chat chat = chatManager.createChat("bob@pakgon");
+            try {
+                chat.sendMessage(message);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
             }
-        } else {
-            Toast.makeText(getApplicationContext(), "Please Press Connect Button", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @OnClick(R.id.btnDisconnect)
-    public void btnDisconnectClick() {
-        if (connection != null) {
-            if (connection.isConnected()) {
-                connection.disconnect();
-                if (bBtnSendClick) {
-                    bBtnSendClick = false;
-                    Log.d("XMPPDisConnect", "Disconnected");
-                    Toast.makeText(getApplicationContext(), "Disconnected", Toast.LENGTH_SHORT).show();
-                }
-            }
+            Log.d("Message", "" + message.getBody().toString());
         }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        degree = Math.round(event.values[0]);
+        degree = event.values[2];
 
         if (connection != null) {
             if (connection.isConnected()) {

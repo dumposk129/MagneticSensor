@@ -2,8 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="10dp">
 
     <TextView
         android:id="@+id/tvHeading"
@@ -15,24 +15,19 @@
 
     <Button
         android:id="@+id/btnConnect"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Connect"/>
+        android:background="@android:color/holo_blue_light"
+        android:text="Connect" />
 
     <Button
         android:id="@+id/btnSend"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
         android:layout_gravity="center"
-        android:text="Send"/>
+        android:layout_marginTop="20dp"
+        android:background="@android:color/holo_orange_light"
+        android:text="Send" />
 
-    <Button
-        android:id="@+id/btnDisconnect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_gravity="center"
-        android:text="Disconnect"/>
 </LinearLayout>
